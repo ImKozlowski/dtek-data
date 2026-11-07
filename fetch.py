@@ -1,23 +1,25 @@
 import asyncio
 import json
+import os
 from datetime import datetime, timezone
 
 from curl_cffi.requests import AsyncSession
 from dtek_client import DtekClient
 from dtek_client.browser_auth import get_cleared_cookies
-from dtek_client.models import SlotStatus  # перевірте точний шлях у вашій версії
 
 # ================= НАЛАШТУВАННЯ =================
 SCHEDULE_URL = "https://www.dtek-krem.com.ua/ua/shutdowns"
 AJAX_URL = "https://www.dtek-krem.com.ua/ua/ajax"
 REGION = "krem"
-CITY = "м. Ірпінь"
-STREET = "вул. Шевченка"
 OUTPUT_FILE = "schedule.json"
+
+# Адреса береться зі змінної середовища (GitHub Secret),
+# щоб не зберігати її у публічному коді.
+CITY = os.environ.get("DTEK_CITY", "м. Ірпінь")
+STREET = os.environ.get("DTEK_STREET", "вул. Незалежності")
 # ================================================
 
 def slot_to_str(status) -> str:
-    """Конвертує SlotStatus у рядок, як у api/index.py."""
     if status is None:
         return "unknown"
     if hasattr(status, "value"):
@@ -25,15 +27,11 @@ def slot_to_str(status) -> str:
     return str(status)
 
 def convert_schedule(result) -> dict:
-    """Перетворює об'єкт результату DtekClient у JSON-сумісний dict."""
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "city": CITY,
-        "street": STREET,
         "groups": {},
     }
 
-    # preset: тижневий графік для всіх груп
     if result.preset and hasattr(result.preset, "groups"):
         for group_id, group_week in result.preset.groups.items():
             days_out = {}
@@ -44,7 +42,6 @@ def convert_schedule(result) -> dict:
                 days_out[str(day_num)] = slots_out
             out["groups"][group_id] = {"preset": days_out}
 
-    # fact: фактичний графік на сьогодні
     if result.fact and hasattr(result.fact, "days"):
         for ts, groups_fact in result.fact.days.items():
             for group_id, slots in groups_fact.items():
@@ -55,7 +52,6 @@ def convert_schedule(result) -> dict:
                 out["groups"][group_id]["fact_timestamp"] = ts
         out["fact_update"] = getattr(result.fact, "update", "")
 
-    # time_zone та назви груп
     if result.preset:
         if hasattr(result.preset, "time_zone"):
             out["time_zone"] = result.preset.time_zone
@@ -66,13 +62,6 @@ def convert_schedule(result) -> dict:
         if hasattr(result.preset, "is_active"):
             out["is_active"] = result.preset.is_active
 
-    # список будинків (для довідки / майбутнього вибору адреси)
-    if result.houses:
-        out["houses"] = {
-            h: {"groups": entry.group_ids}
-            for h, entry in result.houses.items()
-        }
-
     if hasattr(result, "update_timestamp"):
         out["update_timestamp"] = result.update_timestamp
 
@@ -80,6 +69,7 @@ def convert_schedule(result) -> dict:
 
 async def main():
     print(f"[{datetime.now(timezone.utc)}] Починаємо отримання даних ДТЕК...")
+    print(f"Використовуємо: city={CITY}, street={STREET}")
 
     cookies, csrf_token = await get_cleared_cookies(SCHEDULE_URL, show_browser=False)
     print(f"Отримано {len(cookies)} cookies")
@@ -99,7 +89,6 @@ async def main():
     )
 
     async with DtekClient(REGION, ajax_url=AJAX_URL, session=session) as client:
-        # update_fact можна не передавати — бібліотека сама підставить актуальний
         result = await client.get_home_num(city=CITY, street=STREET)
         print("Дані отримано, конвертуємо...")
 
