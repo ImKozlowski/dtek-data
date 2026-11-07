@@ -11,12 +11,9 @@ from dtek_client.browser_auth import get_cleared_cookies
 SCHEDULE_URL = "https://www.dtek-krem.com.ua/ua/shutdowns"
 AJAX_URL = "https://www.dtek-krem.com.ua/ua/ajax"
 REGION = "krem"
-OUTPUT_FILE = "schedule.json"
-
-# Адреса береться зі змінної середовища (GitHub Secret),
-# щоб не зберігати її у публічному коді.
 CITY = os.environ.get("DTEK_CITY", "м. Ірпінь")
 STREET = os.environ.get("DTEK_STREET", "вул. Незалежності")
+OUTPUT_FILE = "schedule.json"
 # ================================================
 
 def slot_to_str(status) -> str:
@@ -42,8 +39,12 @@ def convert_schedule(result) -> dict:
                 days_out[str(day_num)] = slots_out
             out["groups"][group_id] = {"preset": days_out}
 
+    # ✅ ЗБЕРІГАЄМО FACT ЛИШЕ НА СЬОГОДНІ (і, якщо є, на завтра)
     if result.fact and hasattr(result.fact, "days"):
+        today_ts = str(result.fact.today_ts)
         for ts, groups_fact in result.fact.days.items():
+            if ts != today_ts:
+                continue  # Пропускаємо інші дні (післязавтра тощо)
             for group_id, slots in groups_fact.items():
                 if group_id not in out["groups"]:
                     out["groups"][group_id] = {}
