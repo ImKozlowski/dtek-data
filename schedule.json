@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T21:31:26.915945+00:00",
+  "generated_at": "2026-11-07T21:46:07.288601+00:00",
   "groups": {
     "GPV1.1": {
       "preset": {
@@ -1174,7 +1174,7 @@
       },
       "fact_timestamp": "1794002400",
       "fact_tomorrow": {
-        "1": "yes",
+        "1": "no",
         "2": "yes",
         "3": "yes",
         "4": "yes",
@@ -1654,7 +1654,7 @@
       },
       "fact_timestamp": "1794002400",
       "fact_tomorrow": {
-        "1": "yes",
+        "1": "no",
         "2": "yes",
         "3": "yes",
         "4": "yes",
@@ -1894,7 +1894,7 @@
       },
       "fact_timestamp": "1794002400",
       "fact_tomorrow": {
-        "1": "yes",
+        "1": "no",
         "2": "yes",
         "3": "yes",
         "4": "yes",
@@ -2882,7 +2882,7 @@
       "fact_tomorrow_timestamp": "1794088800"
     }
   },
-  "fact_update": "07.11.2026 22:18",
+  "fact_update": "07.11.2026 23:26",
   "time_zone": {
     "1": "00-01",
     "2": "01-02",
@@ -2933,5 +2933,5 @@
     "7": "Неділя"
   },
   "is_active": true,
-  "update_timestamp": "23:20 07.11.2026"
+  "update_timestamp": "23:35 07.11.2026"
 }
