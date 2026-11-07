@@ -29,6 +29,7 @@ def convert_schedule(result) -> dict:
         "groups": {},
     }
 
+    # 1. Пресет (тижневий графік для всіх груп)
     if result.preset and hasattr(result.preset, "groups"):
         for group_id, group_week in result.preset.groups.items():
             days_out = {}
@@ -39,20 +40,26 @@ def convert_schedule(result) -> dict:
                 days_out[str(day_num)] = slots_out
             out["groups"][group_id] = {"preset": days_out}
 
-    # ✅ ЗБЕРІГАЄМО FACT ЛИШЕ НА СЬОГОДНІ (і, якщо є, на завтра)
+    # 2. Факт (сьогодні і завтра)
     if result.fact and hasattr(result.fact, "days"):
         today_ts = str(result.fact.today_ts)
+        tomorrow_ts = str(int(today_ts) + 86400)
         for ts, groups_fact in result.fact.days.items():
-            if ts != today_ts:
-                continue  # Пропускаємо інші дні (післязавтра тощо)
+            if ts not in (today_ts, tomorrow_ts):
+                continue
             for group_id, slots in groups_fact.items():
                 if group_id not in out["groups"]:
                     out["groups"][group_id] = {}
                 slots_out = {str(h): slot_to_str(s) for h, s in slots.items()}
-                out["groups"][group_id]["fact"] = slots_out
-                out["groups"][group_id]["fact_timestamp"] = ts
+                if ts == today_ts:
+                    out["groups"][group_id]["fact"] = slots_out
+                    out["groups"][group_id]["fact_timestamp"] = ts
+                else:
+                    out["groups"][group_id]["fact_tomorrow"] = slots_out
+                    out["groups"][group_id]["fact_tomorrow_timestamp"] = ts
         out["fact_update"] = getattr(result.fact, "update", "")
 
+    # 3. Додаткові дані
     if result.preset:
         if hasattr(result.preset, "time_zone"):
             out["time_zone"] = result.preset.time_zone
