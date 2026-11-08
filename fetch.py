@@ -45,6 +45,26 @@ def previous_yesterday(prev_group: dict, today_ts: str):
     return None, None
 
 
+def carry_over(data: dict, previous: dict):
+    """Якщо сайт цього разу віддав неповні дані, зберігаємо раніше отриманий факт (дати захищають від плутанини)."""
+    prev_groups = previous.get("groups", {})
+    for gid, g in data["groups"].items():
+        for kind in ("fact", "fact_tomorrow"):  # порожній факт = відсутній
+            if not g.get(kind):
+                g.pop(kind, None)
+                g.pop(kind + "_timestamp", None)
+        have = {g.get(k + "_timestamp") for k in ("fact", "fact_tomorrow", "fact_yesterday") if k in g}
+        pg = prev_groups.get(gid, {})
+        for kind in ("fact", "fact_tomorrow"):
+            ts = pg.get(kind + "_timestamp")
+            if kind not in g and pg.get(kind) and ts and ts not in have:
+                g[kind] = pg[kind]
+                g[kind + "_timestamp"] = ts
+                have.add(ts)
+    if not data.get("fact_update") and previous.get("fact_update"):
+        data["fact_update"] = previous["fact_update"]
+
+
 def convert_schedule(result, previous: dict) -> dict:
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -110,43 +130,47 @@ def convert_schedule(result, previous: dict) -> dict:
     if hasattr(result, "update_timestamp"):
         out["update_timestamp"] = result.update_timestamp
 
+    carry_over(out, previous)
     return out
 
 
-async def main():
-    print(f"[{datetime.now(timezone.utc)}] Починаємо отримання даних ДТЕК...")
-    print(f"Використовуємо: city={CITY}, street={STREET}")
-
+async def fetch_result():
     cookies, csrf_token = await get_cleared_cookies(SCHEDULE_URL, show_browser=False)
     print(f"Отримано {len(cookies)} cookies")
-
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "application/json",
     }
     if csrf_token:
         headers["X-CSRF-Token"] = csrf_token
+    session = AsyncSession(timeout=30.0, headers=headers, cookies=cookies, impersonate="chrome120")
+    async with DtekClient(REGION, ajax_url=AJAX_URL, session=session) as client:
+        return await client.get_home_num(city=CITY, street=STREET)
 
-    session = AsyncSession(
-        timeout=30.0,
-        headers=headers,
-        cookies=cookies,
-        impersonate="chrome120",
-    )
 
+async def main():
+    print(f"[{datetime.now(timezone.utc)}] Починаємо отримання даних ДТЕК...")
+    print(f"Використовуємо: city={CITY}, street={STREET}")
     previous = load_previous()  # до перезапису файлу
 
-    async with DtekClient(REGION, ajax_url=AJAX_URL, session=session) as client:
-        result = await client.get_home_num(city=CITY, street=STREET)
-        print("Дані отримано, конвертуємо...")
+    result = None
+    for attempt in range(1, 4):  # сайт може бути перевантажений: кілька спроб
+        try:
+            result = await fetch_result()
+            break
+        except Exception as e:
+            print(f"Спроба {attempt}/3 невдала: {e}")
+            if attempt == 3:
+                raise  # файл не перезаписуємо: лишається попередня версія
+            await asyncio.sleep(30 * attempt)
 
     data = convert_schedule(result, previous)
+    if not data["groups"]:
+        raise RuntimeError("Порожня відповідь: schedule.json не перезаписано")
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
-    print(f"Успішно записано у {OUTPUT_FILE}")
-    print(f"Груп: {len(data['groups'])}")
+    print(f"Успішно записано у {OUTPUT_FILE}, груп: {len(data['groups'])}")
 
 
 if __name__ == "__main__":
