@@ -14,7 +14,9 @@ REGION = "krem"
 CITY = os.environ.get("DTEK_CITY", "м. Ірпінь")
 STREET = os.environ.get("DTEK_STREET", "вул. Незалежності")
 OUTPUT_FILE = "schedule.json"
+MAX_DAY_GAP = 90000  # 25 год: запас на перехід на зимовий час
 # ================================================
+
 
 def slot_to_str(status) -> str:
     if status is None:
@@ -23,7 +25,27 @@ def slot_to_str(status) -> str:
         return status.value
     return str(status)
 
-def convert_schedule(result) -> dict:
+
+def load_previous() -> dict:
+    try:
+        with open(OUTPUT_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def previous_yesterday(prev_group: dict, today_ts: str):
+    """Вчорашній факт із попереднього файлу (після півночі він там ще був «сьогоднішнім»)."""
+    ts, hours = prev_group.get("fact_timestamp"), prev_group.get("fact")
+    if ts and hours and 0 < int(today_ts) - int(ts) <= MAX_DAY_GAP:
+        return hours, ts
+    ts, hours = prev_group.get("fact_yesterday_timestamp"), prev_group.get("fact_yesterday")
+    if ts and hours and 0 < int(today_ts) - int(ts) <= MAX_DAY_GAP:
+        return hours, ts
+    return None, None
+
+
+def convert_schedule(result, previous: dict) -> dict:
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "groups": {},
@@ -34,29 +56,44 @@ def convert_schedule(result) -> dict:
         for group_id, group_week in result.preset.groups.items():
             days_out = {}
             for day_num, day_schedule in group_week.days.items():
-                slots_out = {}
-                for hour_str, status in day_schedule.slots.items():
-                    slots_out[str(hour_str)] = slot_to_str(status)
-                days_out[str(day_num)] = slots_out
+                days_out[str(day_num)] = {
+                    str(h): slot_to_str(s) for h, s in day_schedule.slots.items()
+                }
             out["groups"][group_id] = {"preset": days_out}
 
-    # 2. Факт (сьогодні і завтра)
+    # 2. Факт: сьогодні, завтра, (якщо є на сайті) вчора
     if result.fact and hasattr(result.fact, "days"):
         today_ts = str(result.fact.today_ts)
-        tomorrow_ts = str(int(today_ts) + 86400)
+        today_i = int(today_ts)
+
+        # «Завтра» = найближчий наступний ts. Не today+86400: двічі на рік доба має 23/25 год.
+        future = sorted(int(t) for t in result.fact.days if int(t) > today_i)
+        tomorrow_i = future[0] if future and future[0] - today_i <= MAX_DAY_GAP else None
+
         for ts, groups_fact in result.fact.days.items():
-            if ts not in (today_ts, tomorrow_ts):
+            ts_i = int(ts)
+            if ts_i == today_i:
+                kind = "fact"
+            elif tomorrow_i is not None and ts_i == tomorrow_i:
+                kind = "fact_tomorrow"
+            elif 0 < today_i - ts_i <= MAX_DAY_GAP:
+                kind = "fact_yesterday"
+            else:
                 continue
             for group_id, slots in groups_fact.items():
-                if group_id not in out["groups"]:
-                    out["groups"][group_id] = {}
-                slots_out = {str(h): slot_to_str(s) for h, s in slots.items()}
-                if ts == today_ts:
-                    out["groups"][group_id]["fact"] = slots_out
-                    out["groups"][group_id]["fact_timestamp"] = ts
-                else:
-                    out["groups"][group_id]["fact_tomorrow"] = slots_out
-                    out["groups"][group_id]["fact_tomorrow_timestamp"] = ts
+                g = out["groups"].setdefault(group_id, {})
+                g[kind] = {str(h): slot_to_str(s) for h, s in slots.items()}
+                g[kind + "_timestamp"] = str(ts)
+
+        # Якщо сайт не віддає вчорашній факт, беремо його з попереднього schedule.json.
+        for group_id, g in out["groups"].items():
+            if "fact_yesterday" in g:
+                continue
+            hours, ts = previous_yesterday(previous.get("groups", {}).get(group_id, {}), today_ts)
+            if hours:
+                g["fact_yesterday"] = hours
+                g["fact_yesterday_timestamp"] = ts
+
         out["fact_update"] = getattr(result.fact, "update", "")
 
     # 3. Додаткові дані
@@ -74,6 +111,7 @@ def convert_schedule(result) -> dict:
         out["update_timestamp"] = result.update_timestamp
 
     return out
+
 
 async def main():
     print(f"[{datetime.now(timezone.utc)}] Починаємо отримання даних ДТЕК...")
@@ -96,17 +134,20 @@ async def main():
         impersonate="chrome120",
     )
 
+    previous = load_previous()  # до перезапису файлу
+
     async with DtekClient(REGION, ajax_url=AJAX_URL, session=session) as client:
         result = await client.get_home_num(city=CITY, street=STREET)
         print("Дані отримано, конвертуємо...")
 
-    data = convert_schedule(result)
+    data = convert_schedule(result, previous)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     print(f"Успішно записано у {OUTPUT_FILE}")
     print(f"Груп: {len(data['groups'])}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
