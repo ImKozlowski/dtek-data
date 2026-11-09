@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-09T19:46:15.541776+00:00",
+  "generated_at": "2026-11-09T20:01:36.525515+00:00",
   "groups": {
     "GPV1.1": {
       "preset": {
@@ -2346,7 +2346,7 @@
         "21": "no",
         "22": "no",
         "23": "no",
-        "24": "yes"
+        "24": "first"
       },
       "fact_timestamp": "1794175200",
       "fact_tomorrow": {
@@ -2613,7 +2613,7 @@
         "21": "no",
         "22": "no",
         "23": "no",
-        "24": "yes"
+        "24": "first"
       },
       "fact_timestamp": "1794175200",
       "fact_tomorrow": {
@@ -2880,7 +2880,7 @@
         "21": "no",
         "22": "no",
         "23": "no",
-        "24": "first"
+        "24": "no"
       },
       "fact_timestamp": "1794175200",
       "fact_tomorrow": {
@@ -3147,7 +3147,7 @@
         "21": "no",
         "22": "no",
         "23": "no",
-        "24": "first"
+        "24": "no"
       },
       "fact_timestamp": "1794175200",
       "fact_tomorrow": {
@@ -3206,7 +3206,7 @@
       "fact_yesterday_timestamp": "1794088800"
     }
   },
-  "fact_update": "09.11.2026 21:41",
+  "fact_update": "09.11.2026 21:46",
   "time_zone": {
     "1": "00-01",
     "2": "01-02",
@@ -3257,5 +3257,5 @@
     "7": "Неділя"
   },
   "is_active": true,
-  "update_timestamp": "21:34 09.11.2026"
+  "update_timestamp": "21:48 09.11.2026"
 }
