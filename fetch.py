@@ -14,6 +14,7 @@ REGION = "krem"
 CITY = os.environ.get("DTEK_CITY", "м. Ірпінь")
 STREET = os.environ.get("DTEK_STREET", "вул. Незалежності")
 OUTPUT_FILE = "schedule.json"
+ATTEMPT_TIMEOUT = 150  # секунд на одну спробу: не даємо браузеру «зависнути» на 10 хвилин
 MAX_DAY_GAP = 90000  # 25 год: запас на перехід на зимовий час
 # ================================================
 
@@ -156,13 +157,13 @@ async def main():
     result = None
     for attempt in range(1, 4):  # сайт може бути перевантажений: кілька спроб
         try:
-            result = await fetch_result()
+            result = await asyncio.wait_for(fetch_result(), timeout=ATTEMPT_TIMEOUT)
             break
         except Exception as e:
-            print(f"Спроба {attempt}/3 невдала: {e}")
+            print(f"Спроба {attempt}/3 невдала: {e!r}")
             if attempt == 3:
                 raise  # файл не перезаписуємо: лишається попередня версія
-            await asyncio.sleep(30 * attempt)
+            await asyncio.sleep(20 * attempt)
 
     data = convert_schedule(result, previous)
     if not data["groups"]:
