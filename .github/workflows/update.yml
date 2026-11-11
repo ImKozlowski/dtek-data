@@ -2,16 +2,21 @@ name: Оновлення графіку ДТЕК
 
 on:
   schedule:
-    # Мінімальний інтервал GitHub Actions — 5 хвилин, тут — кожні 20 хвилин
     - cron: '*/20 * * * *'
-  workflow_dispatch: # Дозволяє запускати вручну для тестування
+  workflow_dispatch:
 
 permissions:
-  contents: write # Дозволяє Action робити коміт згенерованого JSON назад у репозиторій
+  contents: write
+
+# Запуски не накладаються один на одного (повільний запуск + наступний давали конфлікти при пуші)
+concurrency:
+  group: dtek-fetch
+  cancel-in-progress: false
 
 jobs:
   fetch-and-commit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04      # зафіксовано: ubuntu-latest мігрує на Ubuntu 26
+    timeout-minutes: 15        # зависання більше не триватиме годинами
     steps:
       - name: Клонування репозиторію
         uses: actions/checkout@v4
@@ -20,15 +25,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Встановлення залежностей
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Встановлюємо браузер Chromium та системні бібліотеки для Playwright
           python -m playwright install --with-deps chromium
 
+      # Тимчасова помилка сайту ДТЕК не повинна одразу давати лист про збій
       - name: Запуск fetch.py
+        continue-on-error: true
         run: python fetch.py
         env:
           DTEK_CITY: ${{ secrets.DTEK_CITY }}
@@ -39,6 +46,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add schedule.json
-          # Якщо файл не змінився, commit видасть помилку — ігноруємо її через || true
-          git commit -m "Оновлення schedule.json [skip ci]" || true
+          if git diff --cached --quiet; then
+            echo "schedule.json без змін"
+            exit 0
+          fi
+          git commit -m "Оновлення schedule.json [skip ci]"
+          git pull --rebase origin main   # якщо за цей час у main з'явилися ваші коміти
           git push origin main
+
+      # Лист про збій приходить лише якщо дані не оновлювались понад 3 години
+      - name: Перевірка свіжості даних
+        run: |
+          python - <<'PY'
+          import json, sys
+          from datetime import datetime, timezone
+          d = json.load(open("schedule.json", encoding="utf-8"))
+          age = (datetime.now(timezone.utc) - datetime.fromisoformat(d["generated_at"])).total_seconds() / 3600
+          print(f"Вік даних: {age:.1f} год")
+          sys.exit(1 if age > 3 else 0)
+          PY
