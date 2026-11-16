@@ -159,6 +159,8 @@ async def main():
         try:
             result = await asyncio.wait_for(fetch_result(), timeout=ATTEMPT_TIMEOUT)
             break
+        except ImportError:
+            raise  # відсутня залежність: повторювати марно, помилка одразу видна в журналі
         except Exception as e:
             print(f"Спроба {attempt}/3 невдала: {e!r}")
             if attempt == 3:
