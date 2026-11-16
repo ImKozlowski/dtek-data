@@ -7,6 +7,24 @@ from curl_cffi.requests import AsyncSession
 from dtek_client import DtekClient
 from dtek_client.browser_auth import get_cleared_cookies
 
+# Тимчасовий патч: виправлення внутрішньої помилки dtek-blackout-client
+import dtek_client.client as dc
+
+# Збережіть оригінальний метод (необов'язково, для відновлення)
+_original_send_raw_post = dc.DtekClient._send_raw_post
+
+async def _patched_send_raw_post(self, session, *args, **kwargs):
+    # Спроба виправити: спочатку await session.post, потім використовувати як контекстний менеджер
+    # Увага: тут потрібно адаптувати під фактичний внутрішній код бібліотеки
+    # Нижче наведено приклад, може знадобитися коригування
+    resp = await session.post(*args, **kwargs)
+    # Якщо оригінальний код використовує async with, можливо, потрібно повернути об'єкт з __aenter__
+    # Найпростіший випадок: якщо session.post повертає об'єкт Response, а бібліотека очікує контекстний менеджер
+    # Можливо, знадобиться повернути обгортку
+    return resp
+
+dc.DtekClient._send_raw_post = _patched_send_raw_post
+
 # ================= НАЛАШТУВАННЯ =================
 SCHEDULE_URL = "https://www.dtek-krem.com.ua/ua/shutdowns"
 AJAX_URL = "https://www.dtek-krem.com.ua/ua/ajax"
