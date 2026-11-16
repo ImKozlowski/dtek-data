@@ -1,3 +1,2 @@
-playwright
-dtek-blackout-client[browser]
-curl_cffi
+dtek-blackout-client
+aiohttp
