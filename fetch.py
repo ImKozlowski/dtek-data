@@ -3,21 +3,18 @@ import json
 import os
 from datetime import datetime, timezone
 
-from curl_cffi.requests import AsyncSession
+import aiohttp
 from dtek_client import DtekClient
-from dtek_client.browser_auth import get_cleared_cookies
 
 # ================= НАЛАШТУВАННЯ =================
-SCHEDULE_URL = "https://www.dtek-krem.com.ua/ua/shutdowns"
 AJAX_URL = "https://www.dtek-krem.com.ua/ua/ajax"
 REGION = "krem"
 CITY = os.environ.get("DTEK_CITY", "м. Ірпінь")
 STREET = os.environ.get("DTEK_STREET", "вул. Незалежності")
 OUTPUT_FILE = "schedule.json"
-ATTEMPT_TIMEOUT = 150  # секунд на одну спробу: не даємо браузеру «зависнути» на 10 хвилин
-MAX_DAY_GAP = 90000  # 25 год: запас на перехід на зимовий час
+ATTEMPT_TIMEOUT = 150
+MAX_DAY_GAP = 90000
 # ================================================
-
 
 def slot_to_str(status) -> str:
     if status is None:
@@ -26,7 +23,6 @@ def slot_to_str(status) -> str:
         return status.value
     return str(status)
 
-
 def load_previous() -> dict:
     try:
         with open(OUTPUT_FILE, encoding="utf-8") as f:
@@ -34,9 +30,7 @@ def load_previous() -> dict:
     except Exception:
         return {}
 
-
 def previous_yesterday(prev_group: dict, today_ts: str):
-    """Вчорашній факт із попереднього файлу (після півночі він там ще був «сьогоднішнім»)."""
     ts, hours = prev_group.get("fact_timestamp"), prev_group.get("fact")
     if ts and hours and 0 < int(today_ts) - int(ts) <= MAX_DAY_GAP:
         return hours, ts
@@ -45,12 +39,10 @@ def previous_yesterday(prev_group: dict, today_ts: str):
         return hours, ts
     return None, None
 
-
 def carry_over(data: dict, previous: dict):
-    """Якщо сайт цього разу віддав неповні дані, зберігаємо раніше отриманий факт (дати захищають від плутанини)."""
     prev_groups = previous.get("groups", {})
     for gid, g in data["groups"].items():
-        for kind in ("fact", "fact_tomorrow"):  # порожній факт = відсутній
+        for kind in ("fact", "fact_tomorrow"):
             if not g.get(kind):
                 g.pop(kind, None)
                 g.pop(kind + "_timestamp", None)
@@ -65,14 +57,12 @@ def carry_over(data: dict, previous: dict):
     if not data.get("fact_update") and previous.get("fact_update"):
         data["fact_update"] = previous["fact_update"]
 
-
 def convert_schedule(result, previous: dict) -> dict:
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "groups": {},
     }
 
-    # 1. Пресет (тижневий графік для всіх груп)
     if result.preset and hasattr(result.preset, "groups"):
         for group_id, group_week in result.preset.groups.items():
             days_out = {}
@@ -82,12 +72,10 @@ def convert_schedule(result, previous: dict) -> dict:
                 }
             out["groups"][group_id] = {"preset": days_out}
 
-    # 2. Факт: сьогодні, завтра, (якщо є на сайті) вчора
     if result.fact and hasattr(result.fact, "days"):
         today_ts = str(result.fact.today_ts)
         today_i = int(today_ts)
 
-        # «Завтра» = найближчий наступний ts. Не today+86400: двічі на рік доба має 23/25 год.
         future = sorted(int(t) for t in result.fact.days if int(t) > today_i)
         tomorrow_i = future[0] if future and future[0] - today_i <= MAX_DAY_GAP else None
 
@@ -106,7 +94,6 @@ def convert_schedule(result, previous: dict) -> dict:
                 g[kind] = {str(h): slot_to_str(s) for h, s in slots.items()}
                 g[kind + "_timestamp"] = str(ts)
 
-        # Якщо сайт не віддає вчорашній факт, беремо його з попереднього schedule.json.
         for group_id, g in out["groups"].items():
             if "fact_yesterday" in g:
                 continue
@@ -117,7 +104,6 @@ def convert_schedule(result, previous: dict) -> dict:
 
         out["fact_update"] = getattr(result.fact, "update", "")
 
-    # 3. Додаткові дані
     if result.preset:
         if hasattr(result.preset, "time_zone"):
             out["time_zone"] = result.preset.time_zone
@@ -135,52 +121,28 @@ def convert_schedule(result, previous: dict) -> dict:
     return out
 
 
-import dtek_client.client as dc
-
-_original_send_raw_post = dc.DtekClient._send_raw_post
-
-async def _patched_send_raw_post(self, *args, **kwargs):
-    # Ключовий момент: отримати сесію з self, а не з параметрів функції
-    session = getattr(self, "session", None) or getattr(self, "_session", None)
-    if session is None:
-        return await _original_send_raw_post(self, *args, **kwargs)
-    
-    # Вручну додати відсутній await
-    resp = await session.post(*args, **kwargs)
-    return resp
-
-dc.DtekClient._send_raw_post = _patched_send_raw_post
-
 async def fetch_result():
-    cookies, csrf_token = await get_cleared_cookies(SCHEDULE_URL, show_browser=False)
-    print(f"Отримано {len(cookies)} cookies")
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "application/json",
-    }
-    if csrf_token:
-        headers["X-CSRF-Token"] = csrf_token
-    session = AsyncSession(timeout=30.0, headers=headers, cookies=cookies, impersonate="chrome120")
-    async with DtekClient(REGION, ajax_url=AJAX_URL, session=session) as client:
+    # Бібліотека сама створить aiohttp сесію і вирішить CSRF
+    async with DtekClient(REGION, ajax_url=AJAX_URL) as client:
         return await client.get_home_num(city=CITY, street=STREET)
 
 
 async def main():
     print(f"[{datetime.now(timezone.utc)}] Починаємо отримання даних ДТЕК...")
     print(f"Використовуємо: city={CITY}, street={STREET}")
-    previous = load_previous()  # до перезапису файлу
+    previous = load_previous()
 
     result = None
-    for attempt in range(1, 4):  # сайт може бути перевантажений: кілька спроб
+    for attempt in range(1, 4):
         try:
             result = await asyncio.wait_for(fetch_result(), timeout=ATTEMPT_TIMEOUT)
             break
         except ImportError:
-            raise  # відсутня залежність: повторювати марно, помилка одразу видна в журналі
+            raise
         except Exception as e:
             print(f"Спроба {attempt}/3 невдала: {e!r}")
             if attempt == 3:
-                raise  # файл не перезаписуємо: лишається попередня версія
+                raise
             await asyncio.sleep(20 * attempt)
 
     data = convert_schedule(result, previous)
@@ -190,7 +152,6 @@ async def main():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"Успішно записано у {OUTPUT_FILE}, груп: {len(data['groups'])}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
