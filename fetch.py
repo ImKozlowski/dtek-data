@@ -7,30 +7,6 @@ from curl_cffi.requests import AsyncSession
 from dtek_client import DtekClient
 from dtek_client.browser_auth import get_cleared_cookies
 
-# ================= ТИМЧАСОВИЙ ПАТЧ =================
-# Виправлення внутрішньої помилки dtek-blackout-client (пропущений await)
-import dtek_client.client as dc
-
-_original_send_raw_post = dc.DtekClient._send_raw_post
-
-async def _patched_send_raw_post(self, *args, **kwargs):
-    # Беремо сесію з self, а не з аргументів
-    session = getattr(self, "session", None) or getattr(self, "_session", None)
-    if session is None:
-        # Якщо сесія не знайдена, повертаємось до оригіналу
-        return await _original_send_raw_post(self, *args, **kwargs)
-    
-    # Тепер викликаємо post з await, як і має бути в curl_cffi
-    resp = await session.post(*args, **kwargs)
-    # Повертаємо об'єкт response. Якщо оригінальний код очікує
-    # контекстний менеджер, можливо, доведеться повернути обгортку,
-    # але найчастіше достатньо просто повернути resp.
-    return resp
-
-dc.DtekClient._send_raw_post = _patched_send_raw_post
-# ===================================================
-
-
 # ================= НАЛАШТУВАННЯ =================
 SCHEDULE_URL = "https://www.dtek-krem.com.ua/ua/shutdowns"
 AJAX_URL = "https://www.dtek-krem.com.ua/ua/ajax"
@@ -38,8 +14,8 @@ REGION = "krem"
 CITY = os.environ.get("DTEK_CITY", "м. Ірпінь")
 STREET = os.environ.get("DTEK_STREET", "вул. Незалежності")
 OUTPUT_FILE = "schedule.json"
-ATTEMPT_TIMEOUT = 150  # секунд на одну спробу
-MAX_DAY_GAP = 90000  # 25 год
+ATTEMPT_TIMEOUT = 150  # секунд на одну спробу: не даємо браузеру «зависнути» на 10 хвилин
+MAX_DAY_GAP = 90000  # 25 год: запас на перехід на зимовий час
 # ================================================
 
 
@@ -60,7 +36,7 @@ def load_previous() -> dict:
 
 
 def previous_yesterday(prev_group: dict, today_ts: str):
-    """Вчорашній факт із попереднього файлу."""
+    """Вчорашній факт із попереднього файлу (після півночі він там ще був «сьогоднішнім»)."""
     ts, hours = prev_group.get("fact_timestamp"), prev_group.get("fact")
     if ts and hours and 0 < int(today_ts) - int(ts) <= MAX_DAY_GAP:
         return hours, ts
@@ -71,10 +47,10 @@ def previous_yesterday(prev_group: dict, today_ts: str):
 
 
 def carry_over(data: dict, previous: dict):
-    """Зберігаємо раніше отриманий факт, якщо сайт віддав неповні дані."""
+    """Якщо сайт цього разу віддав неповні дані, зберігаємо раніше отриманий факт (дати захищають від плутанини)."""
     prev_groups = previous.get("groups", {})
     for gid, g in data["groups"].items():
-        for kind in ("fact", "fact_tomorrow"):
+        for kind in ("fact", "fact_tomorrow"):  # порожній факт = відсутній
             if not g.get(kind):
                 g.pop(kind, None)
                 g.pop(kind + "_timestamp", None)
@@ -106,11 +82,12 @@ def convert_schedule(result, previous: dict) -> dict:
                 }
             out["groups"][group_id] = {"preset": days_out}
 
-    # 2. Факт: сьогодні, завтра, вчора
+    # 2. Факт: сьогодні, завтра, (якщо є на сайті) вчора
     if result.fact and hasattr(result.fact, "days"):
         today_ts = str(result.fact.today_ts)
         today_i = int(today_ts)
 
+        # «Завтра» = найближчий наступний ts. Не today+86400: двічі на рік доба має 23/25 год.
         future = sorted(int(t) for t in result.fact.days if int(t) > today_i)
         tomorrow_i = future[0] if future and future[0] - today_i <= MAX_DAY_GAP else None
 
@@ -129,6 +106,7 @@ def convert_schedule(result, previous: dict) -> dict:
                 g[kind] = {str(h): slot_to_str(s) for h, s in slots.items()}
                 g[kind + "_timestamp"] = str(ts)
 
+        # Якщо сайт не віддає вчорашній факт, беремо його з попереднього schedule.json.
         for group_id, g in out["groups"].items():
             if "fact_yesterday" in g:
                 continue
@@ -174,19 +152,19 @@ async def fetch_result():
 async def main():
     print(f"[{datetime.now(timezone.utc)}] Починаємо отримання даних ДТЕК...")
     print(f"Використовуємо: city={CITY}, street={STREET}")
-    previous = load_previous()
+    previous = load_previous()  # до перезапису файлу
 
     result = None
-    for attempt in range(1, 4):
+    for attempt in range(1, 4):  # сайт може бути перевантажений: кілька спроб
         try:
             result = await asyncio.wait_for(fetch_result(), timeout=ATTEMPT_TIMEOUT)
             break
         except ImportError:
-            raise
+            raise  # відсутня залежність: повторювати марно, помилка одразу видна в журналі
         except Exception as e:
             print(f"Спроба {attempt}/3 невдала: {e!r}")
             if attempt == 3:
-                raise
+                raise  # файл не перезаписуємо: лишається попередня версія
             await asyncio.sleep(20 * attempt)
 
     data = convert_schedule(result, previous)
