@@ -135,6 +135,22 @@ def convert_schedule(result, previous: dict) -> dict:
     return out
 
 
+import dtek_client.client as dc
+
+_original_send_raw_post = dc.DtekClient._send_raw_post
+
+async def _patched_send_raw_post(self, *args, **kwargs):
+    # Ключовий момент: отримати сесію з self, а не з параметрів функції
+    session = getattr(self, "session", None) or getattr(self, "_session", None)
+    if session is None:
+        return await _original_send_raw_post(self, *args, **kwargs)
+    
+    # Вручну додати відсутній await
+    resp = await session.post(*args, **kwargs)
+    return resp
+
+dc.DtekClient._send_raw_post = _patched_send_raw_post
+
 async def fetch_result():
     cookies, csrf_token = await get_cleared_cookies(SCHEDULE_URL, show_browser=False)
     print(f"Отримано {len(cookies)} cookies")
