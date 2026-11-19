@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-19T21:46:24.886855+00:00",
+  "generated_at": "2026-11-19T22:01:11.477170+00:00",
   "groups": {
     "GPV1.1": {
       "preset": {
@@ -186,7 +186,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -212,34 +212,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "second",
-        "4": "no",
-        "5": "no",
-        "6": "no",
-        "7": "no",
-        "8": "yes",
-        "9": "yes",
-        "10": "yes",
-        "11": "yes",
-        "12": "yes",
-        "13": "yes",
-        "14": "no",
-        "15": "no",
-        "16": "no",
-        "17": "no",
-        "18": "first",
-        "19": "yes",
-        "20": "yes",
-        "21": "yes",
-        "22": "yes",
-        "23": "yes",
-        "24": "second"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV1.2": {
       "preset": {
@@ -426,7 +399,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -452,34 +425,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "second",
-        "4": "no",
-        "5": "no",
-        "6": "no",
-        "7": "no",
-        "8": "yes",
-        "9": "yes",
-        "10": "yes",
-        "11": "yes",
-        "12": "yes",
-        "13": "yes",
-        "14": "no",
-        "15": "no",
-        "16": "no",
-        "17": "no",
-        "18": "no",
-        "19": "first",
-        "20": "yes",
-        "21": "yes",
-        "22": "yes",
-        "23": "yes",
-        "24": "yes"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV2.1": {
       "preset": {
@@ -666,7 +612,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -692,34 +638,7 @@
         "23": "no",
         "24": "no"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "no",
-        "8": "no",
-        "9": "no",
-        "10": "yes",
-        "11": "yes",
-        "12": "yes",
-        "13": "yes",
-        "14": "yes",
-        "15": "no",
-        "16": "no",
-        "17": "no",
-        "18": "no",
-        "19": "no",
-        "20": "no",
-        "21": "first",
-        "22": "yes",
-        "23": "yes",
-        "24": "yes"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV2.2": {
       "preset": {
@@ -906,7 +825,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -932,34 +851,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "no",
-        "8": "no",
-        "9": "no",
-        "10": "yes",
-        "11": "yes",
-        "12": "yes",
-        "13": "yes",
-        "14": "yes",
-        "15": "no",
-        "16": "no",
-        "17": "no",
-        "18": "no",
-        "19": "first",
-        "20": "yes",
-        "21": "yes",
-        "22": "yes",
-        "23": "yes",
-        "24": "second"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV3.1": {
       "preset": {
@@ -1146,7 +1038,7 @@
           "24": "yes"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -1172,34 +1064,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "second",
-        "8": "no",
-        "9": "no",
-        "10": "no",
-        "11": "yes",
-        "12": "yes",
-        "13": "yes",
-        "14": "yes",
-        "15": "yes",
-        "16": "yes",
-        "17": "yes",
-        "18": "no",
-        "19": "no",
-        "20": "no",
-        "21": "no",
-        "22": "first",
-        "23": "yes",
-        "24": "yes"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV3.2": {
       "preset": {
@@ -1386,7 +1251,7 @@
           "24": "yes"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -1412,34 +1277,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "second",
-        "8": "no",
-        "9": "no",
-        "10": "no",
-        "11": "yes",
-        "12": "yes",
-        "13": "yes",
-        "14": "yes",
-        "15": "yes",
-        "16": "yes",
-        "17": "yes",
-        "18": "no",
-        "19": "no",
-        "20": "no",
-        "21": "no",
-        "22": "first",
-        "23": "yes",
-        "24": "yes"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV4.1": {
       "preset": {
@@ -1626,7 +1464,7 @@
           "24": "yes"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -1652,34 +1490,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "yes",
-        "8": "yes",
-        "9": "second",
-        "10": "no",
-        "11": "no",
-        "12": "yes",
-        "13": "yes",
-        "14": "yes",
-        "15": "yes",
-        "16": "yes",
-        "17": "yes",
-        "18": "yes",
-        "19": "no",
-        "20": "no",
-        "21": "no",
-        "22": "no",
-        "23": "yes",
-        "24": "yes"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV4.2": {
       "preset": {
@@ -1866,7 +1677,7 @@
           "24": "yes"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -1892,34 +1703,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "yes",
-        "8": "yes",
-        "9": "second",
-        "10": "no",
-        "11": "no",
-        "12": "yes",
-        "13": "yes",
-        "14": "yes",
-        "15": "yes",
-        "16": "yes",
-        "17": "yes",
-        "18": "yes",
-        "19": "no",
-        "20": "no",
-        "21": "no",
-        "22": "no",
-        "23": "first",
-        "24": "yes"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV5.1": {
       "preset": {
@@ -2106,7 +1890,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -2132,34 +1916,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "yes",
-        "8": "yes",
-        "9": "yes",
-        "10": "second",
-        "11": "no",
-        "12": "no",
-        "13": "no",
-        "14": "first",
-        "15": "yes",
-        "16": "yes",
-        "17": "yes",
-        "18": "yes",
-        "19": "yes",
-        "20": "yes",
-        "21": "no",
-        "22": "no",
-        "23": "no",
-        "24": "no"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV5.2": {
       "preset": {
@@ -2346,7 +2103,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -2372,34 +2129,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "no",
-        "2": "no",
-        "3": "no",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "yes",
-        "8": "yes",
-        "9": "yes",
-        "10": "second",
-        "11": "no",
-        "12": "no",
-        "13": "no",
-        "14": "first",
-        "15": "yes",
-        "16": "yes",
-        "17": "yes",
-        "18": "yes",
-        "19": "yes",
-        "20": "yes",
-        "21": "yes",
-        "22": "no",
-        "23": "no",
-        "24": "no"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV6.1": {
       "preset": {
@@ -2586,7 +2316,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -2612,34 +2342,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "no",
-        "2": "no",
-        "3": "no",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "yes",
-        "8": "yes",
-        "9": "yes",
-        "10": "yes",
-        "11": "second",
-        "12": "no",
-        "13": "no",
-        "14": "no",
-        "15": "first",
-        "16": "yes",
-        "17": "yes",
-        "18": "yes",
-        "19": "yes",
-        "20": "yes",
-        "21": "yes",
-        "22": "no",
-        "23": "no",
-        "24": "no"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     },
     "GPV6.2": {
       "preset": {
@@ -2826,7 +2529,7 @@
           "24": "maybe"
         }
       },
-      "fact": {
+      "fact_yesterday": {
         "1": "yes",
         "2": "yes",
         "3": "yes",
@@ -2852,34 +2555,7 @@
         "23": "yes",
         "24": "yes"
       },
-      "fact_timestamp": "1795039200",
-      "fact_yesterday": {
-        "1": "yes",
-        "2": "yes",
-        "3": "yes",
-        "4": "yes",
-        "5": "yes",
-        "6": "yes",
-        "7": "yes",
-        "8": "yes",
-        "9": "yes",
-        "10": "yes",
-        "11": "second",
-        "12": "no",
-        "13": "no",
-        "14": "no",
-        "15": "no",
-        "16": "no",
-        "17": "no",
-        "18": "first",
-        "19": "yes",
-        "20": "yes",
-        "21": "yes",
-        "22": "yes",
-        "23": "no",
-        "24": "no"
-      },
-      "fact_yesterday_timestamp": "1794952800"
+      "fact_yesterday_timestamp": "1795039200"
     }
   },
   "fact_update": "19.11.2026 19:32",
@@ -2933,5 +2609,5 @@
     "7": "Неділя"
   },
   "is_active": true,
-  "update_timestamp": "23:33 19.11.2026"
+  "update_timestamp": "23:47 19.11.2026"
 }
